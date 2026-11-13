@@ -1,0 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&display=swap');
+
+.hc {
+  --hc-ms: 6s; /* tiempo que dura cada card */
+  /* Paleta rosa tomada de la imagen de referencia */
+  --pk-50: #fff3f7;
+  --pk-100: #fde3ec;
+  --pk-200: #fad6df;
+  --pk-300: #fbabc6;
+  --pk-400: #f58fb4;
+  --pk-600: #c2185b;
+  --plum: #4a1531;
+  --plum-soft: #6b2748;
+
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--pk-200);
+  border: 1px solid #f8c0d3;
+  box-shadow: 0 12px 30px rgba(194, 24, 91, 0.14);
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.hc-track {
+  display: flex;
+  transition: transform 0.75s cubic-bezier(0.65, 0, 0.25, 1);
+}
+
+.hc-slide {
+  position: relative;
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  padding: 32px 44px 60px;
+  min-height: 320px;
+  color: var(--plum);
+  overflow: hidden;
+}
+
+/* ---------- Fondos ---------- */
+.hc-causa {
+  background:
+    radial-gradient(circle at 22% 45%, rgba(255, 255, 255, 0.75), transparent 40%),
+    linear-gradient(120deg, var(--pk-100) 0%, #fbc4d6 55%, var(--pk-300) 100%);
+}
+.hc-premios {
+  background: linear-gradient(135deg, var(--pk-50) 0%, var(--pk-200) 100%);
+}
+.hc-costo {
+  background:
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.6), transparent 42%),
+    linear-gradient(135deg, #fbc4d6 0%, var(--pk-400) 100%);
+}
+
+/* ---------- Tipografía ---------- */
+.hc-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(30px, 4.6vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  color: var(--plum);
+}
+.hc-title-dark { font-size: clamp(26px, 4vw, 36px); margin-bottom: 20px; text-align: center; }
+
+.hc-tag {
+  display: inline-block;
+  padding: 5px 13px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #a3124f;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(194, 24, 91, 0.25);
+  margin-bottom: 12px;
+}
+.hc-lead {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(20px, 3vw, 28px);
+  color: #b0134f;
+  margin: 6px 0 8px;
+}
+.hc-body {
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 44ch;
+  color: var(--plum-soft);
+}
+.hc-signoff {
+  margin-top: 14px;
+  padding-top: 10px;
+  display: inline-block;
+  border-top: 1px solid rgba(74, 21, 49, 0.25);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plum);
+}
+
+/* ---------- Card 1: foto de Marely ---------- */
+.hc-photo-wrap { position: relative; flex-shrink: 0; width: 190px; height: 236px; }
+.hc-photo-frame {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 95px 95px 24px 24px;
+  border: 5px solid #fff;
+  overflow: hidden;
+  background: var(--pk-100);
+  box-shadow: 0 12px 28px rgba(194, 24, 91, 0.25);
+}
+.hc-photo-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+.hc-photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+.hc-photo-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), transparent 65%);
+  animation: hc-pulse 3.2s ease-in-out infinite;
+}
+.hc-heart {
+  position: absolute;
+  z-index: 2;
+  color: #e8588f;
+  font-size: 20px;
+  opacity: 0;
+  animation: hc-float 4.5s ease-in infinite;
+}
+.hc-heart-1 { left: -8px; bottom: 40px; }
+.hc-heart-2 { right: -10px; bottom: 90px; font-size: 26px; animation-delay: 1.5s; }
+.hc-heart-3 { right: 20px; bottom: 10px; font-size: 15px; animation-delay: 3s; }
+
+/* ---------- Card 2: premios ---------- */
+.hc-prizes-wrap { width: 100%; max-width: 820px; }
+.hc-prizes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #fff;
+  border: 1px solid #f8c0d3;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(194, 24, 91, 0.12);
+}
+.hc-prize {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 24px 14px 28px;
+  border-top: 4px solid transparent;
+}
+.hc-prize + .hc-prize { border-left: 1px solid #fbd5e1; }
+.hc-prize-oro { border-top-color: #f59e0b; }
+.hc-prize-plata { border-top-color: #94a3b8; }
+.hc-prize-bronce { border-top-color: #c2410c; }
+.hc-prize-place { font-size: 12.5px; font-weight: 700; color: #b0134f; }
+.hc-prize-name {
+  margin-top: 4px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(22px, 3.4vw, 32px);
+  line-height: 1.1;
+  color: var(--plum);
+}
+.hc-prize-detail { font-size: 15px; font-weight: 600; color: var(--plum-soft); }
+
+/* ---------- Card 3: costo ---------- */
+.hc-price-wrap { text-align: center; flex-shrink: 0; }
+.hc-kicker { font-size: 15px; font-weight: 700; color: var(--plum); }
+.hc-price {
+  display: inline-flex;
+  align-items: flex-start;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(76px, 14vw, 112px);
+  line-height: 1;
+  letter-spacing: -3px;
+  color: var(--plum);
+}
+.hc-currency { font-size: 0.42em; margin-top: 0.14em; margin-right: 4px; color: #fff; letter-spacing: 0; }
+.hc-per { font-size: 16px; font-weight: 800; color: var(--plum); }
+.hc-costo .hc-body { color: var(--plum); }
+.hc-costo .hc-signoff { border-top-color: rgba(74, 21, 49, 0.3); }
+.hc-ticket {
+  display: inline-block;
+  padding: 7px 15px;
+  margin-bottom: 12px;
+  border: 2px dashed rgba(74, 21, 49, 0.55);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.45);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--plum);
+}
+
+/* ---------- Puntos tipo Instagram ---------- */
+.hc-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.hc-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 99px;
+  background: rgba(74, 21, 49, 0.28);
+  overflow: hidden;
+  cursor: pointer;
+  transition: width 0.35s ease;
+}
+.hc-dot-active { width: 32px; }
+.hc-dot-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--pk-600);
+  border-radius: 99px;
+  transform-origin: left;
+  animation: hc-fill var(--hc-ms) linear forwards;
+}
+.hc-paused .hc-dot-fill { animation-play-state: paused; }
+
+/* ---------- Animaciones ---------- */
+@keyframes hc-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes hc-pulse { 0%, 100% { transform: scale(0.94); opacity: 0.7; } 50% { transform: scale(1.06); opacity: 1; } }
+@keyframes hc-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  20% { opacity: 0.95; }
+  100% { transform: translateY(-80px) scale(1.15); opacity: 0; }
+}
+@keyframes hc-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes hc-pop { 0% { opacity: 0; transform: scale(0.75); } 60% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+
+.hc-slide-active .hc-text > * { animation: hc-rise 0.7s 0.35s both; }
+.hc-slide-active .hc-text > *:nth-child(2) { animation-delay: 0.45s; }
+.hc-slide-active .hc-text > *:nth-child(3) { animation-delay: 0.55s; }
+.hc-slide-active .hc-text > *:nth-child(4) { animation-delay: 0.65s; }
+.hc-slide-active .hc-photo-frame { animation: hc-pop 0.8s 0.3s both; }
+.hc-slide-active .hc-prize { animation: hc-rise 0.7s both; }
+.hc-slide-active .hc-prize:nth-child(1) { animation-delay: 0.3s; }
+.hc-slide-active .hc-prize:nth-child(2) { animation-delay: 0.45s; }
+.hc-slide-active .hc-prize:nth-child(3) { animation-delay: 0.6s; }
+.hc-slide-active .hc-price { animation: hc-pop 0.8s 0.3s both; }
+
+/* ---------- Celular: card horizontal y compacta ---------- */
+@media (max-width: 700px) {
+  .hc { border-radius: 18px; }
+
+  /* Foto a la izquierda, textos a la derecha */
+  .hc-slide {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 16px 14px 40px;
+    min-height: 0;
+    text-align: left;
+  }
+
+  .hc-photo-wrap { width: 96px; height: 122px; }
+  .hc-photo-frame { border-radius: 48px 48px 14px 14px; border-width: 3px; }
+  .hc-photo-glow { inset: -10px; }
+  .hc-photo-placeholder { font-size: 34px; }
+  .hc-heart { font-size: 14px; }
+  .hc-heart-2 { font-size: 17px; }
+  .hc-heart-3 { display: none; }
+
+  .hc-tag { font-size: 10.5px; padding: 3px 9px; margin-bottom: 6px; }
+  .hc-title { font-size: 25px; letter-spacing: -0.5px; }
+  .hc-lead { font-size: 16px; margin: 2px 0 4px; }
+  .hc-body { font-size: 12px; line-height: 1.45; margin: 0; }
+  .hc-signoff { display: none; }
+
+  /* Premios: 3 columnas compactas */
+  .hc-premios { justify-content: center; }
+  .hc-title-dark { font-size: 21px; margin-bottom: 12px; }
+  .hc-prizes { border-radius: 14px; }
+  .hc-prize { padding: 12px 6px 14px; gap: 2px; border-top-width: 3px; }
+  .hc-prize-place { font-size: 10.5px; }
+  .hc-prize-name { font-size: 18px; margin-top: 2px; }
+  .hc-prize-detail { font-size: 12px; }
+
+  /* Costo: precio a la izquierda, texto a la derecha */
+  .hc-kicker { font-size: 12px; }
+  .hc-price { font-size: 64px; letter-spacing: -2px; }
+  .hc-per { font-size: 13px; }
+  .hc-ticket { font-size: 12px; padding: 4px 10px; margin-bottom: 6px; border-width: 1.5px; }
+
+  .hc-dots { bottom: 9px; padding: 5px 9px; }
+  .hc-dot-active { width: 26px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-track { transition: none; }
+  .hc-dot-fill { animation: none; transform: none; }
+  .hc-photo-glow, .hc-heart { animation: none; }
+  .hc-slide-active .hc-text > *, .hc-slide-active .hc-photo-frame, .hc-slide-active .hc-prize, .hc-slide-active .hc-price { animation: none; }
+}
