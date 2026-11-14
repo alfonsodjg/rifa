@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import { generarPdfBoletos } from './generarPdfBoletos';
 
 const MAX_EMAIL = 60;
 const MAX_PASSWORD = 72; // límite real de Supabase/bcrypt; evita bloquear contraseñas existentes
@@ -16,6 +17,12 @@ function Etiqueta({ texto, valor, max, ayuda }) {
       </span>
     </div>
   );
+}
+
+// Error bonito debajo del campo (reemplaza el globo nativo del navegador)
+function ErrorCampo({ texto }) {
+  if (!texto) return null;
+  return <p className="field-error" role="alert">{texto}</p>;
 }
 
 const iconoProps = {
@@ -63,6 +70,16 @@ function IconoCompartir() {
   );
 }
 
+function IconoDescargar() {
+  return (
+    <svg {...iconoProps}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
 const POR_PAGINA = 10;
 
 export default function AdminView() {
@@ -70,6 +87,7 @@ export default function AdminView() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorLogin, setErrorLogin] = useState('');
+  const [erroresLogin, setErroresLogin] = useState({});
 
   const [numero, setNumero] = useState('');
   const [estado, setEstado] = useState('ocupado');
@@ -77,17 +95,21 @@ export default function AdminView() {
   const [telefono, setTelefono] = useState('');
   const [alerta, setAlerta] = useState({ tipo: '', texto: '' });
   const [ocupados, setOcupados] = useState([]);
+  const [erroresForm, setErroresForm] = useState({});
 
   // Modal (editar o liberar): null | { tipo: 'editar' | 'liberar', numero, nombre }
   const [modal, setModal] = useState(null);
   const [editNombre, setEditNombre] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
   const [errorModal, setErrorModal] = useState('');
+  const [erroresModal, setErroresModal] = useState({});
   const [guardando, setGuardando] = useState(false);
 
-  // Paginación de la lista de vendidos y aviso de "enlace copiado"
+  // Paginación de la lista de vendidos, buscador y aviso de "enlace copiado"
   const [paginaAdmin, setPaginaAdmin] = useState(1);
+  const [busquedaAdmin, setBusquedaAdmin] = useState('');
   const [copiado, setCopiado] = useState(false);
+  const [exportando, setExportando] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -121,6 +143,14 @@ export default function AdminView() {
   async function iniciarSesion(e) {
     e.preventDefault();
     setErrorLogin('');
+
+    const err = {};
+    if (!email.trim()) err.email = 'Escribe tu correo electrónico.';
+    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) err.email = 'Escribe un correo válido.';
+    if (!password) err.password = 'Escribe tu contraseña.';
+    setErroresLogin(err);
+    if (Object.keys(err).length > 0) return;
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setErrorLogin('Credenciales incorrectas.');
@@ -135,16 +165,43 @@ export default function AdminView() {
     const valor = e.target.value;
     if (valor === '' || (/^\d{1,3}$/.test(valor) && Number(valor) <= 300)) {
       setNumero(valor);
+      setErroresForm((p) => ({ ...p, numero: '' }));
     }
   }
 
   // Teléfono: solo dígitos, máximo 10
   function manejarTelefono(e) {
     setTelefono(e.target.value.replace(/\D/g, '').slice(0, MAX_TELEFONO));
+    setErroresForm((p) => ({ ...p, telefono: '' }));
   }
 
   function manejarTelefonoModal(e) {
     setEditTelefono(e.target.value.replace(/\D/g, '').slice(0, MAX_TELEFONO));
+    setErroresModal((p) => ({ ...p, telefono: '' }));
+  }
+
+  // Buscador de la lista de vendidos
+  function manejarBusquedaAdmin(e) {
+    setBusquedaAdmin(e.target.value.slice(0, 30));
+    setPaginaAdmin(1);
+  }
+
+  // ---------- Exportar PDF (todos los boletos, para imprimir o compartir) ----------
+  async function exportarPDF() {
+    setExportando(true);
+    setAlerta({ tipo: '', texto: 'Generando PDF...' });
+    try {
+      const { data, error } = await supabase
+        .from('boletos')
+        .select('numero, nombre, estado')
+        .order('numero', { ascending: true });
+      if (error) throw error;
+      await generarPdfBoletos(data || []);
+      setAlerta({ tipo: 'exito', texto: '✅ PDF generado.' });
+    } catch (err) {
+      setAlerta({ tipo: 'error', texto: 'No se pudo generar el PDF: ' + (err.message || err) });
+    }
+    setExportando(false);
   }
 
   // ---------- Compartir la web pública ----------
@@ -179,26 +236,32 @@ export default function AdminView() {
     setEditNombre(b.nombre || '');
     setEditTelefono(b.telefono || '');
     setErrorModal('');
+    setErroresModal({});
     setModal({ tipo: 'editar', numero: b.numero, nombre: b.nombre });
   }
 
   function abrirLiberar(b) {
     setErrorModal('');
+    setErroresModal({});
     setModal({ tipo: 'liberar', numero: b.numero, nombre: b.nombre });
   }
 
   function cerrarModal() {
     setModal(null);
     setErrorModal('');
+    setErroresModal({});
     setGuardando(false);
   }
 
   async function guardarEdicion(e) {
     e.preventDefault();
-    if (!editNombre.trim()) {
-      setErrorModal('Escribe el nombre.');
-      return;
-    }
+
+    const err = {};
+    if (!editNombre.trim()) err.nombre = 'Escribe el nombre.';
+    if (editTelefono === '') err.telefono = 'Escribe el teléfono (10 dígitos).';
+    setErroresModal(err);
+    if (Object.keys(err).length > 0) return;
+
     if (editTelefono.length !== MAX_TELEFONO) {
       setErrorModal('El teléfono debe tener 10 dígitos.');
       return;
@@ -247,6 +310,20 @@ export default function AdminView() {
   // ---------- Formulario principal ----------
   async function actualizarBoleto(e) {
     e.preventDefault();
+
+    // Campos vacíos: errores bonitos en lugar de los del navegador
+    const err = {};
+    if (numero === '') err.numero = 'Escribe el número de boleto.';
+    if (estado === 'ocupado') {
+      if (!nombre.trim()) err.nombre = 'Escribe el nombre del comprador.';
+      if (telefono === '') err.telefono = 'Escribe el teléfono (10 dígitos).';
+    }
+    setErroresForm(err);
+    if (Object.keys(err).length > 0) {
+      setAlerta({ tipo: '', texto: '' });
+      return;
+    }
+
     const numInt = parseInt(numero, 10);
 
     if (!numInt || numInt < 1 || numInt > 300) {
@@ -293,9 +370,21 @@ export default function AdminView() {
     }
   }
 
-  const totalPaginasAdmin = Math.ceil(ocupados.length / POR_PAGINA) || 1;
+  // Lista de vendidos filtrada por el buscador (número, nombre o teléfono)
+  const filtradosAdmin = ocupados.filter((b) => {
+    const q = busquedaAdmin.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(b.numero).padStart(3, '0').includes(q) ||
+      String(b.numero) === q ||
+      (b.nombre && b.nombre.toLowerCase().includes(q)) ||
+      (b.telefono && b.telefono.includes(q))
+    );
+  });
+
+  const totalPaginasAdmin = Math.ceil(filtradosAdmin.length / POR_PAGINA) || 1;
   const paginaSegura = Math.min(paginaAdmin, totalPaginasAdmin);
-  const paginados = ocupados.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
+  const paginados = filtradosAdmin.slice((paginaSegura - 1) * POR_PAGINA, paginaSegura * POR_PAGINA);
 
   // ---------- LOGIN ----------
   if (!sesion) {
@@ -306,32 +395,40 @@ export default function AdminView() {
           <h2 className="login-title">Panel Admin</h2>
           <p className="login-sub">Ingresa con tu cuenta para administrar los boletos.</p>
 
-          <form onSubmit={iniciarSesion} className="form">
+          <form onSubmit={iniciarSesion} className="form" noValidate>
             <div>
               <Etiqueta texto="Correo electrónico" valor={email} max={MAX_EMAIL} />
               <input
-                className="input"
+                className={`input ${erroresLogin.email ? 'input-error' : ''}`}
                 type="email"
                 placeholder="correo@ejemplo.com"
                 maxLength={MAX_EMAIL}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErroresLogin((p) => ({ ...p, email: '' }));
+                }}
+                aria-invalid={!!erroresLogin.email}
                 autoComplete="username"
               />
+              <ErrorCampo texto={erroresLogin.email} />
             </div>
             <div>
               <Etiqueta texto="Contraseña" valor={password} max={MAX_PASSWORD} />
               <input
-                className="input"
+                className={`input ${erroresLogin.password ? 'input-error' : ''}`}
                 type="password"
                 placeholder="••••••••"
                 maxLength={MAX_PASSWORD}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErroresLogin((p) => ({ ...p, password: '' }));
+                }}
+                aria-invalid={!!erroresLogin.password}
                 autoComplete="current-password"
               />
+              <ErrorCampo texto={erroresLogin.password} />
             </div>
             <button type="submit" className="btn-primary">Entrar</button>
           </form>
@@ -353,6 +450,15 @@ export default function AdminView() {
             <h2 className="card-title-sm">Boletos</h2>
             <div className="admin-actions">
               <a href="/" className="btn-ghost">Ver web</a>
+              <button
+                type="button"
+                className="btn-ghost btn-ghost-icon"
+                onClick={exportarPDF}
+                disabled={exportando}
+              >
+                {exportando ? <span className="spinner-xs" aria-hidden="true" /> : <IconoDescargar />}
+                {exportando ? 'Generando...' : 'Exportar PDF'}
+              </button>
               <button type="button" className="btn-ghost btn-ghost-icon" onClick={compartirWeb}>
                 <IconoCompartir />
                 {copiado ? '¡Enlace copiado!' : 'Compartir'}
@@ -367,11 +473,11 @@ export default function AdminView() {
             </div>
           </div>
 
-          <form onSubmit={actualizarBoleto} className="form">
+          <form onSubmit={actualizarBoleto} className="form" noValidate>
             <div>
               <Etiqueta texto="Boleto" valor={numero} ayuda="1 - 300" />
               <input
-                className="input"
+                className={`input ${erroresForm.numero ? 'input-error' : ''}`}
                 type="number"
                 inputMode="numeric"
                 min="1"
@@ -379,13 +485,21 @@ export default function AdminView() {
                 placeholder="Ej. 25"
                 value={numero}
                 onChange={manejarNumero}
-                required
+                aria-invalid={!!erroresForm.numero}
               />
+              <ErrorCampo texto={erroresForm.numero} />
             </div>
 
             <div>
               <Etiqueta texto="Marcar como" valor="" ayuda="" />
-              <select className="input" value={estado} onChange={(e) => setEstado(e.target.value)}>
+              <select
+                className="input"
+                value={estado}
+                onChange={(e) => {
+                  setEstado(e.target.value);
+                  setErroresForm((p) => ({ ...p, nombre: '', telefono: '' }));
+                }}
+              >
                 <option value="ocupado">Vendido</option>
                 <option value="disponible">Disponible</option>
               </select>
@@ -396,27 +510,32 @@ export default function AdminView() {
                 <div>
                   <Etiqueta texto="Nombre" valor={nombre} max={MAX_NOMBRE} />
                   <input
-                    className="input"
+                    className={`input ${erroresForm.nombre ? 'input-error' : ''}`}
                     type="text"
                     maxLength={MAX_NOMBRE}
                     placeholder="Nombre del comprador"
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    required
+                    onChange={(e) => {
+                      setNombre(e.target.value);
+                      setErroresForm((p) => ({ ...p, nombre: '' }));
+                    }}
+                    aria-invalid={!!erroresForm.nombre}
                   />
+                  <ErrorCampo texto={erroresForm.nombre} />
                 </div>
                 <div>
                   <Etiqueta texto="Teléfono" valor={telefono} max={MAX_TELEFONO} />
                   <input
-                    className="input"
+                    className={`input ${erroresForm.telefono ? 'input-error' : ''}`}
                     type="tel"
                     inputMode="numeric"
                     maxLength={MAX_TELEFONO}
                     placeholder="10 dígitos"
                     value={telefono}
                     onChange={manejarTelefono}
-                    required
+                    aria-invalid={!!erroresForm.telefono}
                   />
+                  <ErrorCampo texto={erroresForm.telefono} />
                 </div>
               </>
             )}
@@ -433,8 +552,27 @@ export default function AdminView() {
 
         <div className="card card-pad">
           <h3 className="card-title-sm">Vendidos ({ocupados.length} / 300)</h3>
+
+          {ocupados.length > 0 && (
+            <div className="search-box search-box-admin">
+              <span className="search-icon" aria-hidden="true">🔍</span>
+              <input
+                className="search-input"
+                type="text"
+                inputMode="search"
+                maxLength={30}
+                placeholder="Buscar número, nombre o teléfono"
+                aria-label="Buscar boleto vendido"
+                value={busquedaAdmin}
+                onChange={manejarBusquedaAdmin}
+              />
+            </div>
+          )}
+
           {ocupados.length === 0 ? (
             <p className="empty-left">Aún no hay boletos vendidos.</p>
+          ) : filtradosAdmin.length === 0 ? (
+            <p className="empty-left">Sin resultados.</p>
           ) : (
             <div className="table-scroll">
               <table className="table">
@@ -513,31 +651,36 @@ export default function AdminView() {
         <div className="modal-overlay" onClick={cerrarModal}>
           <div className="modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             {modal.tipo === 'editar' ? (
-              <form onSubmit={guardarEdicion} className="form">
+              <form onSubmit={guardarEdicion} className="form" noValidate>
                 <h3 className="modal-title">Editar boleto #{String(modal.numero).padStart(3, '0')}</h3>
                 <div>
                   <Etiqueta texto="Nombre" valor={editNombre} max={MAX_NOMBRE} />
                   <input
-                    className="input"
+                    className={`input ${erroresModal.nombre ? 'input-error' : ''}`}
                     type="text"
                     maxLength={MAX_NOMBRE}
                     value={editNombre}
-                    onChange={(e) => setEditNombre(e.target.value)}
+                    onChange={(e) => {
+                      setEditNombre(e.target.value);
+                      setErroresModal((p) => ({ ...p, nombre: '' }));
+                    }}
+                    aria-invalid={!!erroresModal.nombre}
                     autoFocus
-                    required
                   />
+                  <ErrorCampo texto={erroresModal.nombre} />
                 </div>
                 <div>
                   <Etiqueta texto="Teléfono" valor={editTelefono} max={MAX_TELEFONO} />
                   <input
-                    className="input"
+                    className={`input ${erroresModal.telefono ? 'input-error' : ''}`}
                     type="tel"
                     inputMode="numeric"
                     maxLength={MAX_TELEFONO}
                     value={editTelefono}
                     onChange={manejarTelefonoModal}
-                    required
+                    aria-invalid={!!erroresModal.telefono}
                   />
+                  <ErrorCampo texto={erroresModal.telefono} />
                 </div>
                 {errorModal && <p className="modal-error">{errorModal}</p>}
                 <div className="modal-actions">

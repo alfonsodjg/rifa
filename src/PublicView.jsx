@@ -71,6 +71,14 @@ export default function PublicView() {
 
   const mensajeGeneralWa = encodeURIComponent(`¡Hola! Me interesa participar en la rifa y apartar boletos.`);
 
+  if (cargando) {
+    return (
+      <div className="splash" role="status" aria-label="Cargando">
+        <div className="spinner" />
+      </div>
+    );
+  }
+  
   return (
     <div className="page">
       {/* HEADER */}
