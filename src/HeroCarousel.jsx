@@ -66,13 +66,15 @@ export default function HeroCarousel() {
           </div>
 
           <div className="hc-text">
-            <span className="hc-tag">Hoy por mí, mañana por ti</span>
-            <h1 className="hc-title">Rifa con causa</h1>
-            <p className="hc-lead">Apoya a Marely</p>
+            <span className="hc-ticket">🎟️ 300 boletos</span>
             <p className="hc-body">
-              Marely necesita realizarse una CPRE de urgencia. Cada boleto es una ayuda real para ella.
+              Elige tu número en la tabla, resérvalo por WhatsApp y manda tu comprobante para confirmarlo.
             </p>
-            <p className="hc-signoff">¡Ayúdanos a ayudar!</p>
+            <p className="hc-fecha">
+              <strong>📅 Miércoles 18 de noviembre, 6:30 pm</strong>
+              Transmisión en vivo por Facebook. Te enviaremos los detalles al teléfono que registres.
+            </p>
+            <p className="hc-signoff">Tu número puede ser el ganador 💖</p>
           </div>
         </article>
 

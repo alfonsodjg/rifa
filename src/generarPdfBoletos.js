@@ -2,7 +2,7 @@ const TOTAL_BOLETOS = 300;
 const POR_HOJA = 20;
 
 const TEXTO =
-    'Rifa para una buena causa ayudemos a Marely Cuatra para que pueda estar con su bebe en casa, esta rifa se lleva a cabo con el fin de recaudar fondos para que Marley pueda hacerse una cirugía urgente de vesícula, ya que no cuenta con los recursos suficientes para hacerse la operación correcta, el costo del boleto es de $100, habrá tres ganadores y los premios serán: primer lugar una pantalla de 55 pulgadas, segundo lugar una lavadora de 11 kg y tercer lugar una bocina grande';
+  'Rifa para una buena causa ayudemos a Marely Cuatra para que pueda estar con su bebe en casa, esta rifa se lleva a cabo con el fin de recaudar fondos para que Marley pueda hacerse una cirugía urgente de vesícula, ya que no cuenta con los recursos suficientes para hacerse la operación correcta, el costo del boleto es de $100, habrá tres ganadores y los premios serán: primer lugar una pantalla de 55 pulgadas, segundo lugar una lavadora de 11 kg y tercer lugar una bocina grande. La rifa se llevará a cabo el miércoles 18 de noviembre a las 6:30 pm, con transmisión en vivo por Facebook. Los detalles se enviarán al número de teléfono que registren.';
 
 const CIERRE = 'ESPEREMOS CONTAR CON SU APOYO.... HOY ES ELLA, MAÑAMA PUEDES SER TU.';
 
